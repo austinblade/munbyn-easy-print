@@ -13,7 +13,7 @@ struct SettingsView: View {
     }
 }
 
-private struct PrintingSettings: View {
+struct PrintingSettings: View {
     @AppStorage(SettingsKey.defaultMedia) private var defaultMedia = LabelMedia.default.keyword
     @AppStorage(SettingsKey.overrideDensity) private var overrideDensity = false
     @AppStorage(SettingsKey.density) private var density = 8
@@ -75,7 +75,7 @@ private struct PrintingSettings: View {
     }
 }
 
-private struct ConnectionSettings: View {
+struct ConnectionSettings: View {
     @Environment(AppModel.self) private var model
     @AppStorage(SettingsKey.dialect) private var dialect = TSPLDialect.standard.rawValue
     @AppStorage(SettingsKey.keepConnected) private var keepConnected = false
@@ -135,7 +135,7 @@ private struct ConnectionSettings: View {
     }
 }
 
-private struct GeneralSettings: View {
+struct GeneralSettings: View {
     @Environment(AppModel.self) private var model
     @AppStorage(SettingsKey.simulate) private var simulate = false
     @AppStorage(SettingsKey.saveJobs) private var saveJobs = false

@@ -153,3 +153,13 @@ final class JobProcessor {
         UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil))
     }
 }
+
+#if DEBUG
+extension JobProcessor {
+    /// Sample state for `--render-screenshots`.
+    func loadDemoPreview(_ image: NSImage, info: String) {
+        lastPreview = image
+        lastPreviewInfo = info
+    }
+}
+#endif

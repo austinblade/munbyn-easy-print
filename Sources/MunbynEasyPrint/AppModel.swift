@@ -12,7 +12,7 @@ final class AppModel {
         case starting, listening, failed(String)
     }
 
-    let printer = BluetoothPrinter()
+    let printer: BluetoothPrinter
     let processor: JobProcessor
 
     private(set) var jobs: [PrintJob] = []
@@ -26,15 +26,18 @@ final class AppModel {
     @ObservationIgnored private let service: IPPPrinterService
     @ObservationIgnored private var server: HTTPServer?
 
-    init() {
+    /// `demo` skips the IPP server, Bluetooth and notifications; see `loadDemoState()`.
+    init(demo: Bool = false) {
         PrintSettings.registerDefaults()
         service = IPPPrinterService(store: store)
+        printer = BluetoothPrinter(demo: demo)
         processor = JobProcessor(store: store, printer: printer)
 
         store.onChange = { [weak self] in self?.refreshJobs() }
         service.onSubmit = { [weak self] submission in
             DispatchQueue.main.async { MainActor.assumeIsolated { self?.processor.submit(submission) } }
         }
+        guard !demo else { return }
         startServer()
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
     }
@@ -162,3 +165,31 @@ final class AppModel {
         launchAtLogin = SMAppService.mainApp.status == .enabled
     }
 }
+
+#if DEBUG
+extension AppModel {
+    /// Sample state for `--render-screenshots`.
+    func loadDemoState() {
+        let now = Date()
+        func ago(_ minutes: Double) -> Date { now.addingTimeInterval(-minutes * 60) }
+        serverState = .listening
+        queueInstalled = true
+        launchAtLogin = true
+        jobs = [
+            PrintJob(id: 5, name: "USPS Priority Mail label.pdf", user: "demo", state: .processing,
+                     message: "Sending 69 KB…", created: ago(0.2), processingAt: ago(0.1), progress: 0.62),
+            PrintJob(id: 4, name: "Order #1042 packing slip.pdf", user: "demo", state: .completed,
+                     message: "1 label · 4.00×6.00 in", created: ago(12), completedAt: ago(12), pages: 1),
+            PrintJob(id: 3, name: "Pantry jar labels", user: "demo", state: .completed,
+                     message: "6 labels · 2.25×1.25 in", created: ago(48), completedAt: ago(47), pages: 6),
+            PrintJob(id: 2, name: "Test label", user: "demo", state: .completed,
+                     message: "1 label · 4.00×6.00 in", created: ago(95), completedAt: ago(95), pages: 1),
+        ]
+        printer.loadDemoState()
+        if let image = TestLabel.make(media: .default, dpi: 300, printerName: printer.savedName) {
+            processor.loadDemoPreview(NSImage(cgImage: image, size: NSSize(width: image.width, height: image.height)),
+                                      info: "Test label — 1 label · 4.00×6.00 in")
+        }
+    }
+}
+#endif

@@ -95,9 +95,10 @@ final class BluetoothPrinter: NSObject {
     /// Writes queued in the controller at once; each is at most one RFCOMM MTU.
     private static let window = 8
 
-    override init() {
+    /// `demo` skips Bluetooth entirely; see `loadDemoState()`.
+    init(demo: Bool = false) {
         super.init()
-        central = CBCentralManager(delegate: self, queue: .main)
+        if !demo { central = CBCentralManager(delegate: self, queue: .main) }
     }
 
     // MARK: - Public API
@@ -526,3 +527,24 @@ extension BluetoothPrinter: IOBluetoothRFCOMMChannelDelegate, IOBluetoothDeviceI
         }
     }
 }
+
+#if DEBUG
+extension BluetoothPrinter {
+    /// Sample state for `--render-screenshots`.
+    func loadDemoState() {
+        savedName = "ITPP941BP-1A2B"
+        savedID = "00-11-22-33-44-55"
+        status = .sending
+        link = Link(address: "00-11-22-33-44-55", service: "SPP Dev", channel: 1, mtu: 990)
+        log = [
+            "9:41:02 AM  Using paired printer ITPP941BP-1A2B",
+            "9:41:02 AM  Connecting to ITPP941BP-1A2B…",
+            "9:41:03 AM  Looking up services…",
+            "9:41:03 AM  Connected — SPP Dev on channel 1, MTU 990",
+            "9:41:03 AM  Sending 71204 bytes in 990-byte packets",
+            "9:42:34 AM  Idle — disconnecting",
+            "9:42:34 AM  Disconnected",
+        ]
+    }
+}
+#endif

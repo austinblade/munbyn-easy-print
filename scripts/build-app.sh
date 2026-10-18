@@ -5,7 +5,9 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 APP="build/Munbyn Easy Print.app"
-swift build -c release
+# Universal binary so it runs on Apple silicon and Intel Macs.
+BUILD=(swift build -c release --arch arm64 --arch x86_64)
+"${BUILD[@]}"
 
 if [[ ! -f Resources/AppIcon.icns ]]; then
   ICONSET="$(mktemp -d)/AppIcon.iconset"
@@ -15,7 +17,7 @@ fi
 
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
-cp "$(swift build -c release --show-bin-path)/MunbynEasyPrint" "$APP/Contents/MacOS/"
+cp "$("${BUILD[@]}" --show-bin-path)/MunbynEasyPrint" "$APP/Contents/MacOS/"
 cp Resources/Info.plist "$APP/Contents/"
 cp Resources/AppIcon.icns "$APP/Contents/Resources/"
 # A real identity keeps the code signature stable across rebuilds, so macOS
